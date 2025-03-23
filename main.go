@@ -20,10 +20,10 @@ func main() {
 
 	handler := http.StripPrefix("/app", http.FileServer(http.Dir(filePathRoot)))
 	apicfg := &apiConfig{}
-	mux.HandleFunc("/healthz", ReadinessHandler)
 	mux.Handle("/app/", apicfg.middlewareMetricsInc(handler))
-	mux.HandleFunc("/metrics", apicfg.CountHandler)
-	mux.HandleFunc("/reset", apicfg.ResetHandler)
+	mux.HandleFunc("GET /healthz", ReadinessHandler)
+	mux.HandleFunc("GET /metrics", apicfg.CountHandler)
+	mux.HandleFunc("POST /reset", apicfg.ResetHandler)
 
 	//server configuration
 	s := http.Server{

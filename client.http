@@ -1,1 +1,8 @@
-POST http://localhost:8080/admin/reset
+POST http://localhost:8080/api/users 
+
+Content-Type: application/json
+
+
+{
+    "email": "saul@bettercall.com"
+}

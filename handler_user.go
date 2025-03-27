@@ -17,15 +17,19 @@ type User struct {
 
 func (cfg *apiConfig) CreatUserHandler(w http.ResponseWriter, r *http.Request) {
 
+	type Parameters struct {
+		Email string `json:"email"`
+	}
+
 	decoder := json.NewDecoder(r.Body)
-	user := User{}
-	err := decoder.Decode(&user)
+	params := Parameters{}
+	err := decoder.Decode(&params)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters", err)
 		return
 	}
 
-	userData, err := cfg.dbQ.CreateUser(r.Context(), user.Email)
+	userData, err := cfg.dbQ.CreateUser(r.Context(), params.Email)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Coudldn't create the user table in database", err)
 		return
@@ -33,9 +37,9 @@ func (cfg *apiConfig) CreatUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	respondWithJSON(w, 201, User{
 		ID:        userData.ID,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
-		Email:     user.Email,
+		CreatedAt: userData.CreatedAt,
+		UpdatedAt: userData.UpdatedAt,
+		Email:     userData.Email,
 	})
 
 }

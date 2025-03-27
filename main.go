@@ -48,6 +48,7 @@ func main() {
 	mux.HandleFunc("POST /api/users", apicfg.CreatUserHandler)
 	mux.HandleFunc("POST /api/chirps", apicfg.ChirpHandler)
 	mux.HandleFunc("GET /api/chirps", apicfg.ChirpsGetHandler)
+	mux.HandleFunc("GET /api/chirps/{chirpID}", apicfg.ChirpGetHandler)
 
 
 	//server configuration

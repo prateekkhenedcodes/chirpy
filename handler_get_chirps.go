@@ -12,11 +12,6 @@ func (cfg *apiConfig) ChirpsGetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not encode the data", err)
-		return
-	}
-
 	chirpReturnVals := make([]ChirpReturnVals, 0, len(chirps))
 
 	for _, chirp := range chirps {

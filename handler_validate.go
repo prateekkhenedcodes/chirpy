@@ -9,19 +9,19 @@ import (
 	"github.com/google/uuid"
 	"github.com/prateekkhenedcodes/chirpy/internal/database"
 )
-
+type ChirpReturnVals struct {
+	ID        uuid.UUID `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	Body      string    `json:"body"`
+	UserId    uuid.UUID `json:"user_id"`
+}
 func (cfg *apiConfig) ChirpHandler(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Body    string `json:"body"`
 		User_id uuid.UUID
 	}
-	type ChirpReturnVals struct {
-		ID        uuid.UUID `json:"id"`
-		CreatedAt time.Time `json:"created_at`
-		UpdatedAt time.Time `json:"updated_at"`
-		Body      string    `json:"body"`
-		UserId    uuid.UUID `json:"user_id"`
-	}
+
 
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
@@ -39,7 +39,10 @@ func (cfg *apiConfig) ChirpHandler(w http.ResponseWriter, r *http.Request) {
 
 	clean := profaneClean(params.Body)
 
-	dbData, err := cfg.dbQ.CreateChirp(r.Context(), database.CreateChirpParams{clean, params.User_id})
+	dbData, err := cfg.dbQ.CreateChirp(r.Context(), database.CreateChirpParams{
+		Body:   clean,
+		UserID: params.User_id,
+	})
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Could not create chirp post", err)
 		return

@@ -7,7 +7,27 @@ package database
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
+
+const checkUser = `-- name: CheckUser :one
+SELECT id, created_at, updated_at, email, hashed_password FROM users
+WHERE id = $1
+`
+
+func (q *Queries) CheckUser(ctx context.Context, id uuid.UUID) (User, error) {
+	row := q.db.QueryRowContext(ctx, checkUser, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Email,
+		&i.HashedPassword,
+	)
+	return i, err
+}
 
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (id, created_at, updated_at, email, hashed_password)
@@ -40,19 +60,9 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 }
 
 const deleteUsers = `-- name: DeleteUsers :exec
-
-
 DELETE FROM users
 `
 
-// -- name: SetPass :one
-// INSERT INTO users (hashed_password)
-// VALUES (
-//
-//	$1
-//
-// )
-// RETURNING *;
 func (q *Queries) DeleteUsers(ctx context.Context) error {
 	_, err := q.db.ExecContext(ctx, deleteUsers)
 	return err

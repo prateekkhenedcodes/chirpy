@@ -17,15 +17,15 @@ type User struct {
 	Email     string    `json:"email"`
 }
 
-type Parameters struct {
-	Password string `json:"password"`
-	Email    string `json:"email"`
-}
-
 func (cfg *apiConfig) CreatUserHandler(w http.ResponseWriter, r *http.Request) {
 
+	type paraMeters struct {
+		Password string `json:"password"`
+		Email    string `json:"email"`
+	}
+
 	decoder := json.NewDecoder(r.Body)
-	params := Parameters{}
+	params := paraMeters{}
 	err := decoder.Decode(&params)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters", err)

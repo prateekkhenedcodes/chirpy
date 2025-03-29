@@ -16,6 +16,7 @@ type apiConfig struct {
 	fileserverHits atomic.Int32
 	dbQ            *database.Queries
 	platform       string
+	jwtSecret      string
 }
 
 func main() {
@@ -28,6 +29,7 @@ func main() {
 	}
 	apicfg := &apiConfig{}
 	apicfg.platform = os.Getenv("PLATFORM")
+	apicfg.jwtSecret = os.Getenv("JWT_SECRET")
 	if apicfg.platform == "" {
 		log.Fatal("PLATFORM must be set")
 	}
@@ -50,7 +52,6 @@ func main() {
 	mux.HandleFunc("GET /api/chirps", apicfg.ChirpsGetHandler)
 	mux.HandleFunc("GET /api/chirps/{chirpID}", apicfg.ChirpGetHandler)
 	mux.HandleFunc("POST /api/login", apicfg.LoginHandler)
-
 
 	//server configuration
 	s := http.Server{

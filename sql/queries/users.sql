@@ -15,3 +15,8 @@ DELETE FROM users;
 -- name: GetPass :one 
 SELECT * FROM users
 WHERE email = $1; 
+
+
+-- name: CheckUser :one
+SELECT * FROM users
+WHERE id = $1 ;

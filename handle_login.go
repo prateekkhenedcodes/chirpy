@@ -18,6 +18,7 @@ type Login struct {
 	Email         string    `json:"email"`
 	Token         string    `json:"token"`
 	ReshreshToken string    `json:"refresh_token"`
+	IsChirpRed    bool      `json:"is_chirpy_red"`
 }
 
 func (cfg *apiConfig) LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -51,11 +52,13 @@ func (cfg *apiConfig) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	token, err := auth.MakeJWT(userData.ID, cfg.jwtSecret, time.Duration(defaultExpTime)*time.Second)
 	if err != nil {
 		respondWithError(w, 401, "error during generating token string", err)
+		return
 	}
 
 	refreshToken, err := auth.MakeRefreshToken()
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "refresh token was not generated", err)
+		return
 	}
 
 	tokenData, err := cfg.dbQ.CreateRefreshToken(r.Context(), database.CreateRefreshTokenParams{
@@ -66,6 +69,13 @@ func (cfg *apiConfig) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Could not create reshresh_token table ", err)
+		return
+	}
+
+	dataB, err := cfg.dbQ.GetPass(r.Context(), params.Email)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "email does not exists or error during getting data from the email ", err)
+		return
 	}
 
 	respondWithJSON(w, 200, Login{
@@ -75,6 +85,7 @@ func (cfg *apiConfig) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		Email:         userData.Email,
 		Token:         token,
 		ReshreshToken: tokenData.Token,
+		IsChirpRed:    dataB.IsChirpyRed,
 	})
 
 }

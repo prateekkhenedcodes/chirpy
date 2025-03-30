@@ -37,9 +37,22 @@ func (cfg *apiConfig) ChirpsGetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	authorID := uuid.Nil
+	authorIDString := r.URL.Query().Get("author_id")
+	if authorIDString != "" {
+		authorID, err = uuid.Parse(authorIDString)
+		if err != nil {
+			respondWithError(w, http.StatusBadRequest, "Invalid author ID", err)
+			return
+		}
+	}
+
 	chirpReturnVals := make([]ChirpReturnVals, 0, len(chirps))
 
 	for _, chirp := range chirps {
+		if authorID != uuid.Nil && chirp.UserID != authorID {
+			continue
+		}
 		chirpReturnVals = append(chirpReturnVals, ChirpReturnVals{
 			ID:        chirp.ID,
 			CreatedAt: chirp.CreatedAt,

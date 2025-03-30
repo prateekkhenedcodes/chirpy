@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
+	"github.com/prateekkhenedcodes/chirpy/internal/auth"
 )
 
 func (cfg *apiConfig) ChirpGetHandler(w http.ResponseWriter, r *http.Request) {
@@ -26,4 +27,43 @@ func (cfg *apiConfig) ChirpGetHandler(w http.ResponseWriter, r *http.Request) {
 		Body:      data.Body,
 		UserId:    data.UserID,
 	})
+}
+
+func (cfg *apiConfig) ChirpDeleteHandler(w http.ResponseWriter, r *http.Request) {
+
+	token, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		respondWithError(w, 401, "could not get the access token", err)
+		return
+	}
+
+	userIDJ, err := auth.ValidateJWT(token, cfg.jwtSecret)
+	if err != nil {
+		respondWithError(w, 401, "could not validate the access token ", err)
+		return
+	}
+
+	chirpID, err := uuid.Parse(r.PathValue("chirpID"))
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "could not get the chirp id from the path", err)
+		return
+	}
+
+	chirpData, err := cfg.dbQ.GetChirp(r.Context(), chirpID)
+	if err != nil {
+		respondWithError(w, 404, "chirp not found", err)
+		return
+	}
+
+	if chirpData.UserID != userIDJ {
+		respondWithError(w, 403, "user is not the author of the chirp", err)
+		return
+	}
+
+	err = cfg.dbQ.DeleteChirp(r.Context(), chirpID)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "could not delete the chirp", err)
+	}
+
+	respondWithJSON(w, 204, nil)
 }

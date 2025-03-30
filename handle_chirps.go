@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"sort"
 
 	"github.com/google/uuid"
 	"github.com/prateekkhenedcodes/chirpy/internal/auth"
@@ -62,6 +63,15 @@ func (cfg *apiConfig) ChirpsGetHandler(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
+	sortID := r.URL.Query().Get("sort")
+	if sortID == "" || sortID == "asc" {
+		respondWithJSON(w, 200, chirpReturnVals)
+		return
+	}
+
+	sort.Slice(chirpReturnVals, func(i, j int) bool {
+		return chirpReturnVals[i].CreatedAt.After(chirpReturnVals[j].CreatedAt)
+	})
 	respondWithJSON(w, 200, chirpReturnVals)
 
 }

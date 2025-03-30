@@ -17,6 +17,7 @@ type apiConfig struct {
 	dbQ            *database.Queries
 	platform       string
 	jwtSecret      string
+	polkaKey       string
 }
 
 func main() {
@@ -30,6 +31,7 @@ func main() {
 	apicfg := &apiConfig{}
 	apicfg.platform = os.Getenv("PLATFORM")
 	apicfg.jwtSecret = os.Getenv("JWT_SECRET")
+	apicfg.polkaKey = os.Getenv("POLKA_KEY")
 	if apicfg.platform == "" {
 		log.Fatal("PLATFORM must be set")
 	}

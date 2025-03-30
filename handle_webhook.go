@@ -2,9 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/google/uuid"
+	"github.com/prateekkhenedcodes/chirpy/internal/auth"
 )
 
 func (cfg *apiConfig) WebhookHandler(w http.ResponseWriter, r *http.Request) {
@@ -24,6 +26,14 @@ func (cfg *apiConfig) WebhookHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	apikey, err := auth.GetAPIKey(r.Header)
+	if err != nil {
+		respondWithError(w, 401, "could not get the apikey", err)
+		return
+	}
+	if apikey != cfg.polkaKey {
+		respondWithError(w, 401, "apikeys have not matched", fmt.Errorf("apikeys have not matched"))
+	}
 	if params.Event != "user.upgraded" {
 		respondWithError(w, 204, "not a valid event", err)
 		return

@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"net/http"
 	"strings"
@@ -20,6 +22,19 @@ func GetBearerToken(headers http.Header) (string, error) {
 
 	return token, nil
 
+}
+
+func MakeRefreshToken() (string, error) {
+	bs := make([]byte, 32)
+
+	_, err := rand.Read(bs)
+	if err != nil {
+		return "", fmt.Errorf("random 32 bytes of data not generated: %v", err)
+	}
+
+	tokenString := hex.EncodeToString(bs)
+
+	return tokenString, nil
 }
 
 func stripAuth(s string) (string, error) {

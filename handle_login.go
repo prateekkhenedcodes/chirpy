@@ -1,27 +1,29 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/prateekkhenedcodes/chirpy/internal/auth"
+	"github.com/prateekkhenedcodes/chirpy/internal/database"
 )
 
 type Login struct {
-	ID        uuid.UUID `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Email     string    `json:"email"`
-	Token     string    `json:"token"`
+	ID            uuid.UUID `json:"id"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+	Email         string    `json:"email"`
+	Token         string    `json:"token"`
+	ReshreshToken string    `json:"refresh_token"`
 }
 
 func (cfg *apiConfig) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
-		Password           string `json:"password"`
-		Email              string `json:"email"`
-		Expires_in_seconds int    `json:"expires_in_seconds"`
+		Password string `json:"password"`
+		Email    string `json:"email"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -46,22 +48,33 @@ func (cfg *apiConfig) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	defaultExpTime := 3600
 
-	if params.Expires_in_seconds > 0 {
-		if params.Expires_in_seconds < defaultExpTime {
-			defaultExpTime = params.Expires_in_seconds
-		}
-	}
 	token, err := auth.MakeJWT(userData.ID, cfg.jwtSecret, time.Duration(defaultExpTime)*time.Second)
 	if err != nil {
 		respondWithError(w, 401, "error during generating token string", err)
 	}
 
+	refreshToken, err := auth.MakeRefreshToken()
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "refresh token was not generated", err)
+	}
+
+	tokenData, err := cfg.dbQ.CreateRefreshToken(r.Context(), database.CreateRefreshTokenParams{
+		Token:     refreshToken,
+		UserID:    userData.ID,
+		ExpiresAt: time.Now().AddDate(0, 0, 60),
+		RevokedAt: sql.NullTime{},
+	})
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Could not create reshresh_token table ", err)
+	}
+
 	respondWithJSON(w, 200, Login{
-		ID:        userData.ID,
-		CreatedAt: userData.CreatedAt,
-		UpdatedAt: userData.UpdatedAt,
-		Email:     userData.Email,
-		Token:     token,
+		ID:            userData.ID,
+		CreatedAt:     userData.CreatedAt,
+		UpdatedAt:     userData.UpdatedAt,
+		Email:         userData.Email,
+		Token:         token,
+		ReshreshToken: tokenData.Token,
 	})
 
 }

@@ -54,3 +54,55 @@ func (cfg *apiConfig) CreatUserHandler(w http.ResponseWriter, r *http.Request) {
 	})
 
 }
+
+func (cfg *apiConfig) UpdateUsersHandler(w http.ResponseWriter, r *http.Request) {
+
+	type parameters struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	token, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		respondWithError(w, 401, "access token was not found in header", err)
+		return
+	}
+
+	userID, err := auth.ValidateJWT(token, cfg.jwtSecret)
+	if err != nil {
+		respondWithError(w, 401, "token is invalid ", err)
+		return
+	}
+
+	params := parameters{}
+	decode := json.NewDecoder(r.Body)
+	err = decode.Decode(&params)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Could not decode the request body", err)
+		return
+	}
+
+	hashedPass, err := auth.HashPassword(params.Password)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Could not hash the password", err)
+		return
+	}
+
+	updatedData, err := cfg.dbQ.UpdateEmailPass(r.Context(), database.UpdateEmailPassParams{
+		Email:          params.Email,
+		HashedPassword: hashedPass,
+		ID:             userID,
+	})
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "could not update the email and password", err)
+		return
+	}
+
+	respondWithJSON(w, 200, User{
+		ID:        updatedData.ID,
+		Email:     updatedData.Email,
+		CreatedAt: updatedData.CreatedAt,
+		UpdatedAt: updatedData.UpdatedAt,
+	})
+
+}

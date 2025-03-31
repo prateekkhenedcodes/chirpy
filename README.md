@@ -4,12 +4,12 @@ A HTTP webserver that manages chirps (kind of tweets), built with Golang, managi
 
 ## Requirements
 
-`go version go1.24.1` or greater. 
+`go1.24.1` or greater. 
 
 ## Installation and setup 
 
 - clone the project with `git clone https://github.com/prateekkhenedcodes/chirpy.git`
-- Install project dependencies with `git mod tidy` in the root of the project
+- Install project dependencies with `go mod tidy` in the root of the project
 
 ## Running the server
 
